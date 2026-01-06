@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flashcard Exchange</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+
+<!--AUTH-->
+<section id="auth-section" class="auth-wrapper">
+
+  <div class="auth-card">
+    <h1 class="auth-title">Flashcard Exchange</h1>
+    <p class="auth-subtitle">Learn faster. Remember longer.</p>
+
+    <!--SIGN UP-->
+    <form id="auth-form" class="auth-form">
+    <input id="email" type="email" placeholder="Email" required />
+    <input id="password" type="password" placeholder="Password" required />
+
+    <button id="signup-btn" type="button" class="primary-btn">
+        Create Account
+    </button>
+
+    <div class="divider">or</div>
+
+    <button id="login-btn" type="button" class="secondary-btn">
+        Login
+    </button>
+
+    <p id="auth-error" class="auth-error"></p>
+    </form>
+
+  </div>
+
+</section>
+
+<!--USERNAME SETUP-->
+<section id="username-section" class="modal-overlay" hidden>
+
+  <div class="auth-card">
+    <h2 class="auth-title">Choose a username</h2>
+    <p class="auth-subtitle">This will be visible to others</p>
+
+    <form id="username-form" class="auth-form">
+      <input
+        id="username-input"
+        type="text"
+        placeholder="Username"
+        required
+      />
+
+      <button type="submit" class="primary-btn">
+        Continue
+      </button>
+
+      <p id="username-error" class="auth-error"></p>
+    </form>
+  </div>
+
+</section>
+
+
+<!--APP-->
+<section id="app-section" >
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="search-area">
+      <input id="search-input" type="text" placeholder="Search decks" />
+      <select id="sort-select">
+        <option value="recent">Most Recent</option>
+        <option value="popular">Most Popular</option>
+      </select>
+    </div>
+
+    <!-- SEARCH OVERLAY -->
+    <div id="search-overlay" class="search-overlay hidden">
+      <div id="search-results" class="deck-grid"></div>
+    </div>
+
+    <div class="profile">
+      <img src="./default-avatar.png">
+        <div class="profile-menu">
+         <p id="display-username"></p>
+         <button id="logout-btn">Logout</button>
+         <button id="delete-account-btn" class="danger">Delete Account</button>
+        </div>
+    </div>
+  </header>
+
+  <!-- DASHBOARD -->
+  <main>
+
+    <h2>Hello, <span id="welcome-username"></span> 👋</h2>
+  <br>
+    <!-- USER DECKS -->
+    <section>
+      <h3>Your Decks</h3><br>
+      <div class="deck-grid" id="user-decks"></div>
+    </section>
+<br><br><br>
+    <!-- BOOKMARKED -->
+    <section>
+      <h3>Bookmarked Decks</h3>
+      <div class="deck-grid" id="saved-decks"></div>
+    </section>
+<br><br><br>
+
+    <!-- PUBLIC -->
+    <section>
+      <h3>Explore Public Decks</h3>
+      <div class="deck-grid" id="public-decks"></div>
+    </section>
+
+  </main>
+</section>
+
+<!-- CREATE DECK MODAL -->
+<div id="create-deck-modal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Create New Deck</h3>
+
+    <input
+      type="text"
+      id="create-deck-title"
+      placeholder="Deck title"
+    />
+
+    <textarea
+      id="create-deck-description"
+      placeholder="Deck description"
+      rows="4"
+    ></textarea>
+
+    <div class="modal-actions">
+      <button id="create-deck-confirm">Create</button>
+      <button id="create-deck-cancel" class="secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT DECK MODAL -->
+<div id="edit-deck-modal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Edit Deck</h3>
+
+    <input
+      type="text"
+      id="edit-deck-title"
+      placeholder="Deck title"
+    />
+
+    <textarea
+      id="edit-deck-description"
+      placeholder="Deck description"
+      rows="4"
+    ></textarea>
+
+    <div class="modal-actions">
+      <button id="save-deck-changes">Save</button>
+      <button id="cancel-deck-edit" class="secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DECK / STUDY PAGE -->
+<section id="deck-page" hidden>
+
+
+  <!-- Deck header stays normal -->
+  <div class="deck-header">
+    <button id="back-to-dashboard">← Back</button>
+    <h2 id="deck-title"></h2>
+    <p id="deck-description"></p>
+  </div>
+
+  <div id="cards-grid" class="cards-grid"></div>
+
+  <!-- ADD CARD BUTTON -->
+  <div class="card-owner-actions">
+    <button id="add-card-btn">Add Card</button>
+  </div>
+
+  <!-- COMMENTS SECTION -->
+  <div id="comments-section" class="comments-section">
+
+    <h3>Comments</h3>
+
+    <div id="comments-list"></div>
+
+    <div class="comment-input">
+      <input
+        type="text"
+        id="comment-text"
+        placeholder="Write a comment..."
+      />
+      <button id="post-comment-btn">Post</button>
+    </div>
+
+  </div>
+
+
+
+</section>
+
+
+<!-- ADD CARD MODAL -->
+<div id="add-card-modal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Add Flashcard</h3>
+
+    <input
+      type="text"
+      id="add-card-term"
+      placeholder="Term"
+    />
+
+    <textarea
+      id="add-card-definition"
+      placeholder="Definition"
+      rows="4"
+    ></textarea>
+
+    <div class="modal-actions">
+      <button id="add-card-confirm">Add Card</button>
+      <button id="add-card-cancel" class="secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CARD MODAL -->
+<div id="edit-card-modal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Edit Flashcard</h3>
+
+    <input
+      type="text"
+      id="edit-card-term"
+      placeholder="Term"
+    />
+
+    <textarea
+      id="edit-card-definition"
+      placeholder="Definition"
+      rows="4"
+    ></textarea>
+
+    <div class="modal-actions">
+      <button id="save-card-changes">Save</button>
+      <button id="cancel-card-edit" class="secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="./bundle.js"></script>
+</body>
+</html>
