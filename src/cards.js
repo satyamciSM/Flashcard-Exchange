@@ -40,7 +40,30 @@ export async function loadCards(deckId, isOwner = false) {
 
 
 /* ---------------- RENDER CARD ---------------- */
+// function renderCard() {
+//   const termEl = document.getElementById("card-front");
+//   const defEl = document.getElementById("card-back");
+//   const counter = document.getElementById("card-counter");
+//   const inner = document.getElementById("flashcard-inner");
 
+//   // 🚨 DOM not ready yet
+//   if (!termEl || !defEl || !counter || !inner) {
+//     return;
+//   }
+
+//   if (!cards.length) {
+//     termEl.innerText = "No cards yet";
+//     defEl.innerText = "Add cards to start studying";
+//     counter.innerText = "0 / 0";
+//     return;
+//   }
+
+//   inner.classList.remove("flipped");
+
+//   termEl.innerText = cards[currentIndex].term;
+//   defEl.innerText = cards[currentIndex].definition;
+//   counter.innerText = `${currentIndex + 1} / ${cards.length}`;
+// }
 
 
 /* ---------------- STUDY CONTROLS ---------------- */
@@ -160,7 +183,49 @@ export function initStudyControls() {
 }
 
 /* ---------------- EDIT CARD ---------------- */
+// export function editCurrentCard() {
+//   if (!cards.length) return;
 
+//   const card = cards[currentIndex];
+
+//   const modal = document.getElementById("edit-card-modal");
+//   const termInput = document.getElementById("edit-card-term");
+//   const defInput = document.getElementById("edit-card-definition");
+//   const saveBtn = document.getElementById("save-card-changes");
+//   const cancelBtn = document.getElementById("cancel-card-edit");
+
+//   termInput.value = card.term;
+//   defInput.value = card.definition;
+
+//   modal.classList.remove("hidden");
+
+//   saveBtn.onclick = async () => {
+//     const newTerm = termInput.value.trim();
+//     const newDef = defInput.value.trim();
+
+//     if (!newTerm || !newDef) {
+//       alert("Both term and definition are required");
+//       return;
+//     }
+
+//     try {
+//       await updateDoc(
+//         doc(db, "decks", currentDeckId, "cards", card.id),
+//         { term: newTerm, definition: newDef }
+//       );
+
+//       modal.classList.add("hidden");
+//       loadCards(currentDeckId);
+//     } catch (err) {
+//       alert("Failed to update card");
+//       console.error(err);
+//     }
+//   };
+
+//   cancelBtn.onclick = () => {
+//     modal.classList.add("hidden");
+//   };
+// }
 
 export function openAddCardModal(deckId) {
   currentDeckId = deckId;
@@ -245,4 +310,15 @@ function openEditCardModal(card) {
 
 
 /* ---------------- DELETE CARD ---------------- */
+// export async function deleteCurrentCard() {
+//   if (!cards.length) return;
 
+//   const confirmDelete = confirm("Delete this card?");
+//   if (!confirmDelete) return;
+
+//   await deleteDoc(
+//     doc(db, "decks", currentDeckId, "cards", cards[currentIndex].id)
+//   );
+
+//   loadCards(currentDeckId);
+// }

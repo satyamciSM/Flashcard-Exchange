@@ -92,7 +92,9 @@ export function initAuth() {
       if (!ok) return;
 
       try {
-
+        await updateProfile(auth.currentUser, {
+          displayName: username
+        });
         await deleteDoc(doc(db, "users", user.uid));
         await deleteUser(user);
         alert("Account deleted successfully");

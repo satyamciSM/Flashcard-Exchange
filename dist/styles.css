@@ -487,7 +487,18 @@ main {
   gap: 16px;
 }
 
+.cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
 
+.card {
+  width: 240px;
+  height: 300px;
+  perspective: 1000px;
+}
 
 .card-inner {
   width: 100%;
@@ -497,7 +508,9 @@ main {
   transform-style: preserve-3d;
 }
 
-
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
 
 .card-front,
 .card-back {
@@ -519,7 +532,47 @@ main {
   transform: rotateY(180deg);
 }
 
+.card-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+}
 
+.card-menu button {
+  color: #000;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.card-menu-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 24px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+  overflow: hidden;
+}
+
+.card-menu-dropdown button {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-menu-dropdown button:hover {
+  background: #f2f2f2;
+}
+
+.card-menu-dropdown .danger {
+  color: #d00;
+}
 
 #deck-page[hidden] {
   display: none !important;
