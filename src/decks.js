@@ -43,10 +43,9 @@ document.addEventListener("create-deck", () => {
   confirmBtn.onclick = async () => {
     const title = titleInput.value.trim();
     const description = descInput.value.trim();
-    // Get the tags string from input
+ 
     const tagsString = document.getElementById("create-deck-tags").value.trim();
 
-    // Process tags: Split by comma, trim whitespace, and remove empty entries
     let tags = [];
     if (tagsString.length > 0) {
       tags = tagsString.split(",").map(function (tag) {
@@ -88,38 +87,6 @@ document.addEventListener("create-deck", () => {
 });
 
 
-/* ======================================================
-   MIGRATION HELPER (TEMPORARY)
-   Run window.makeAllDecksPublic() in console
-====================================================== */
-window.makeAllDecksPublic = async () => {
-  console.log("🚀 Starting migration: Making all decks public...");
-  try {
-    const querySnapshot = await getDocs(collection(db, "decks"));
-    let count = 0;
-    const updates = [];
-
-    querySnapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (data.isPublic !== true) {
-        updates.push(
-          updateDoc(doc(db, "decks", docSnap.id), { isPublic: true })
-            .then(() => console.log(`✅ Updated: ${data.title}`))
-            .catch(e => console.error(`❌ Error on ${data.title}`, e))
-        );
-        count++;
-      }
-    });
-
-    await Promise.all(updates);
-    console.log(`🎉 Done! Updated ${count} decks.`);
-    alert(`Migration Complete! Updated ${count} decks to public.`);
-  } catch (err) {
-    console.error("Migration failed:", err);
-    alert("Migration failed. Check console.");
-  }
-};
-
 export function initDecks() {
   const publicDecks = document.getElementById("public-decks");
   const userDecks = document.getElementById("user-decks");
@@ -142,7 +109,6 @@ export function initDecks() {
         existingDecks.forEach(deck => deck.remove());
 
         snapshot.forEach(docSnap => {
-          // Cache for search (check duplicates)
           const exists = __publicDecksSearchCache.find(d => d.id === docSnap.id);
           if (!exists) {
             __publicDecksSearchCache.push({ id: docSnap.id, ...docSnap.data() });
@@ -156,7 +122,7 @@ export function initDecks() {
 
   // FAVORITE DECKS
   const savedDecksContainer = document.getElementById("saved-decks");
-  let favoriteDeckIds = new Set(); // Track IDs of favorite decks
+  let favoriteDeckIds = new Set(); 
 
   if (savedDecksContainer) {
     onAuthStateChanged(auth, user => {
@@ -174,10 +140,8 @@ export function initDecks() {
           favoriteDeckIds.add(doc.id);
         });
 
-        // Sync global ref
         window.__favoriteDeckIds = favoriteDeckIds;
 
-        // Trigger UI updates (List + Stars)
         if (window.updateFavoritesUI) {
           window.updateFavoritesUI();
         }
@@ -187,12 +151,6 @@ export function initDecks() {
 
   // PUBLIC DECKS
   const loadPublicDecks = () => {
-    // ... existing logic ...
-    // Pass favoriteDeckIds to renderPublicDecks? 
-    // Or make favoriteDeckIds global/accessible? 
-    // I'll assign it to window or module scope for simplicity in this file.
-    window.__favoriteDeckIds = favoriteDeckIds;
-
     const sortValue = document.getElementById("sort-select").value;
 
     const q = query(
@@ -205,9 +163,16 @@ export function initDecks() {
       __publicDecksSearchCache = []; // reset cache
 
       snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+
+        // Filter out my own decks
+        if (auth.currentUser && data.ownerId === auth.currentUser.uid) {
+          return;
+        }
+
         __publicDecksSearchCache.push({
           id: docSnap.id,
-          ...docSnap.data()
+          ...data
         });
       });
 
@@ -217,7 +182,6 @@ export function initDecks() {
 
   loadPublicDecks();
 
-  // Sort Change Listener
   document.getElementById("sort-select").addEventListener("change", (e) => {
     renderPublicDecks(__publicDecksSearchCache, e.target.value);
   });
@@ -230,19 +194,16 @@ function renderPublicDecks(decksData, sortMode) {
   let sortedDecks = [...decksData];
 
   if (sortMode === "popular") {
-    // Sort by number of likes
     sortedDecks.sort((a, b) => {
       const likesA = a.likes ? Object.keys(a.likes).length : 0;
       const likesB = b.likes ? Object.keys(b.likes).length : 0;
       return likesB - likesA;
     });
   } else {
-    // Default: Sort by date (already fetched in desc order, but ensure consistent)
     sortedDecks.sort((a, b) => b.createdAt - a.createdAt);
   }
 
   sortedDecks.forEach(deckData => {
-    // Construct dummy docSnap to reuse renderDeck
     const docSnap = {
       id: deckData.id,
       data: () => deckData
@@ -260,8 +221,6 @@ function renderPublicDecks(decksData, sortMode) {
     document.dispatchEvent(new Event("create-deck"));
   });
 }
-
-// Re-fetch Favorites helper
 async function renderFavorites(container) {
   container.innerHTML = "";
   const ids = window.__favoriteDeckIds || new Set();
@@ -283,7 +242,6 @@ async function renderFavorites(container) {
   }
 }
 
-// Global listener to update UI when favorites change
 window.updateFavoritesUI = () => {
   const container = document.getElementById("saved-decks");
   if (container) renderFavorites(container);
@@ -313,13 +271,12 @@ function renderDeck(docSnap, container) {
 
   const isOwner = user && deck.ownerId === user.uid;
 
-  // Check favorite status
   const isFavorite = window.__favoriteDeckIds ? window.__favoriteDeckIds.has(docSnap.id) : false;
 
 
   const el = document.createElement("div");
   el.className = "deck-card";
-  el.dataset.id = docSnap.id; // Store ID for updates
+  el.dataset.id = docSnap.id; 
 
   el.innerHTML = `
     ${isOwner ? `
@@ -354,14 +311,12 @@ function renderDeck(docSnap, container) {
     const menuBtn = el.querySelector(".menu-btn");
     const dropdown = el.querySelector(".menu-dropdown");
 
-    // Toggle dropdown
     menuBtn.onclick = e => {
       e.stopPropagation();
       dropdown.style.display =
         dropdown.style.display === "block" ? "none" : "block";
     };
 
-    // Close dropdown on outside click
     document.addEventListener(
       "click",
       () => {
@@ -381,18 +336,15 @@ function renderDeck(docSnap, container) {
       const saveBtn = document.getElementById("save-deck-changes");
       const cancelBtn = document.getElementById("cancel-deck-edit");
 
-      // Prefill values
       titleInput.value = deck.title;
       descInput.value = deck.description || "";
       tagsInput.value = deck.tags ? deck.tags.join(", ") : "";
 
       modal.classList.remove("hidden");
 
-      // SAVE
       saveBtn.onclick = async () => {
         const newTitle = titleInput.value.trim();
         const newDesc = descInput.value.trim();
-        // Process new tags similar to creation
         const newTagsString = tagsInput.value.trim();
         let newTags = [];
         if (newTagsString.length > 0) {
@@ -417,15 +369,11 @@ function renderDeck(docSnap, container) {
         }
       };
 
-      // CANCEL
       cancelBtn.onclick = () => {
         modal.classList.add("hidden");
       };
     };
 
-
-
-    // DELETE DECK 
     el.querySelector(".delete-deck").onclick = async e => {
       e.stopPropagation();
 
@@ -443,8 +391,7 @@ function renderDeck(docSnap, container) {
     };
   }
 
-
-
+  
   // LIKE TOGGLE  
   const likeBtn = el.querySelector(".like-btn");
   likeBtn.onclick = async e => {
@@ -479,10 +426,8 @@ function renderDeck(docSnap, container) {
 
     try {
       if (isFav) {
-        // Remove from favorites
         await deleteDoc(userRef);
       } else {
-        // Add to favorites
         await setDoc(userRef, { savedAt: serverTimestamp() });
       }
     } catch (err) {
@@ -503,7 +448,7 @@ function renderDeck(docSnap, container) {
     setTimeout(async () => {
       await loadCards(docSnap.id, isOwner);
       initComments(docSnap.id);
-      addToHistory(docSnap.id, deck); // Track history
+      addToHistory(docSnap.id, deck); 
 
       if (isOwner) {
         document.getElementById("add-card-btn").onclick = () => {
@@ -518,23 +463,15 @@ function renderDeck(docSnap, container) {
   container.appendChild(el);
 }
 
-/* ======================================================
-   SEARCH ADDON — ADD ONLY (DO NOT MODIFY EXISTING CODE)
-====================================================== */
 
 let __publicDecksSearchCache = [];
 
-/* Hook into existing public decks snapshot
-   You MUST add ONE LINE where public decks are rendered:
-   __publicDecksSearchCache.push({ id: docSnap.id, ...docSnap.data() });
-*/
-
-/* ---------- SEARCH INIT ---------- */
+//  SEARCH INIT  
 export function initSearchAddon() {
   const input = document.getElementById("search-input");
   const overlay = document.getElementById("search-overlay");
   const results = document.getElementById("search-results");
-  // Target MAIN for dimming so navbar stays bright
+
   const dashboard = document.querySelector("main");
 
   if (!input || !overlay || !results || !dashboard) return;
@@ -551,19 +488,16 @@ export function initSearchAddon() {
 
     // Filter decks based on the search query
     const matches = __publicDecksSearchCache.filter(deck => {
-      // Check Title
+
       const titleMatch = deck.title && deck.title.toLowerCase().includes(q);
 
-      // Check Description
       const descriptionMatch = deck.description && deck.description.toLowerCase().includes(q);
 
-      // Check Tags
       let tagMatch = false;
       if (deck.tags) {
         tagMatch = deck.tags.some(tag => tag.toLowerCase().includes(q));
       }
 
-      // Return true if any condition matches
       return titleMatch || descriptionMatch || tagMatch;
     });
 
@@ -578,16 +512,11 @@ export function initSearchAddon() {
   });
 
   document.addEventListener("click", e => {
-    // Keep open if clicking input
     if (e.target === input) return;
 
-    // Close if clicking outside overlay OR clicking the overlay background (not a card)
     const isInsideCard = e.target.closest(".deck-card");
     const isInsideOverlay = overlay.contains(e.target);
 
-    // Logic to close the search overlay:
-    // 1. If we clicked OUTSIDE the overlay container
-    // 2. OR if we clicked the overlay background (empty space between cards)
     const clickedOutside = !isInsideOverlay;
     const clickedOnEmptySpace = isInsideOverlay && !isInsideCard;
 
@@ -598,7 +527,7 @@ export function initSearchAddon() {
   });
 }
 
-/* ---------- SEARCH RESULT CARD ---------- */
+// SEARCH RESULT CARD    
 function renderDeckForSearchAddon(deck, container) {
   const el = document.createElement("div");
   el.className = "deck-card";
@@ -615,20 +544,13 @@ function renderDeckForSearchAddon(deck, container) {
     document.getElementById("search-overlay").classList.add("hidden");
     document.getElementById("app-section").classList.remove("dimmed");
 
-    // IMPORTANT: reuse existing flow
-    // IMPORTANT: reuse existing flow
     showDeckPage();
-    loadCards(deck.id, false); // search result viewed as non-owner initially or check owner? 
-    // actually search results might be own decks. 
-    // Ideally we check if auth.currentUser.uid == deck.ownerId
-    // But for now safe to pass false or strict check:
     const isOwner = auth.currentUser && auth.currentUser.uid === deck.ownerId;
     loadCards(deck.id, isOwner);
 
     initComments(deck.id);
     addToHistory(deck.id, deck);
 
-    // hide Add Card button (read-only)
     const addBtn = document.getElementById("add-card-btn");
     if (addBtn) addBtn.style.display = "none";
   };
@@ -636,11 +558,11 @@ function renderDeckForSearchAddon(deck, container) {
   container.appendChild(el);
 }
 
-/* ---------- BOOTSTRAP SEARCH ADDON ---------- */
+//  BOOTSTRAP SEARCH ADDON
 document.addEventListener("DOMContentLoaded", initSearchAddon);
 
 
-/* ---------- COMMENTS ---------- */
+// COMMENTS
 let commentsUnsub = null;
 
 
@@ -658,7 +580,6 @@ export function initComments(deckId) {
 
   if (commentsUnsub) commentsUnsub();
 
-  // 🔁 LIVE LISTENER
   commentsUnsub = onSnapshot(commentsRef, snap => {
     list.innerHTML = "";
 
@@ -694,18 +615,14 @@ export function initComments(deckId) {
 
         menuBtn.onclick = e => {
           e.stopPropagation();
-          // specific toggle
           dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
         };
 
-        // Hide when clicking outside is already handled generally in many apps, but let's add a specific one or rely on global?
-        // Let's add a global click listener to close all dropdowns, or just this one.
         document.addEventListener("click", () => {
           dropdown.style.display = "none";
         });
       }
 
-      // EDIT
       if (isOwner) {
         el.querySelector(".edit-comment").onclick = () => {
           input.value = data.text;
@@ -721,7 +638,7 @@ export function initComments(deckId) {
     });
   });
 
-  // 🟢 POST / UPDATE COMMENT
+  // POST / UPDATE COMMENT
   postBtn.onclick = async () => {
     const text = input.value.trim();
     if (!text) return;
@@ -745,7 +662,7 @@ export function initComments(deckId) {
 }
 
 
-/* ---------- HISTORY FEATURE ---------- */
+// HISTORY FEATURE
 async function addToHistory(deckId, deckData) {
   const user = auth.currentUser;
   if (!user) return;

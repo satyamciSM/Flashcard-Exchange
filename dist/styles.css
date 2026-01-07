@@ -1,4 +1,4 @@
-/* ---------- RESET ---------- */
+/* Reset */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -11,7 +11,7 @@ body {
   background: #f7f9fc;
 }
 
-/* ---------- AUTH ---------- */
+/*   AUTH   */
 .auth-wrapper {
   min-height: 100vh;
   display: flex;
@@ -26,7 +26,7 @@ body {
 }
 
 
-/* ---------- MODAL OVERLAY ---------- */
+/*   MODAL OVERLAY   */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -111,15 +111,6 @@ body {
   margin-top: 0.75rem;
 }
 
-
-/* .auth-box {
-  width: 100%;
-  max-width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-} */
-
 input,
 select,
 button {
@@ -155,7 +146,7 @@ button {
   background: #f9fafb;
 }
 
-/* ---------- NAVBAR ---------- */
+/*   NAVBAR   */
 .navbar {
   display: flex;
   position: relative;
@@ -206,11 +197,6 @@ button {
 }
 
 
-
-/* .profile:hover .profile-menu {
-  display: block;
-} */
-
 .profile-menu p,
 .profile-menu button {
   padding: 10px;
@@ -225,9 +211,8 @@ button {
   color: white;
 }
 
-/* ---------- MAIN ---------- */
+/*   MAIN   */
 main {
-
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
@@ -245,14 +230,14 @@ main {
   transition: opacity 0.3s ease;
 }
 
-/* ---------- DECK GRID ---------- */
+/*   DECK GRID   */
 .deck-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
 }
 
-/* ---------- DECK CARD ---------- */
+/*   DECK CARD   */
 .deck-card {
   background: #ffffff;
   border-radius: 12px;
@@ -265,7 +250,7 @@ main {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 }
 
-/* ---------- DECK MENU (3 DOTS) ---------- */
+/*   DECK MENU (3 DOTS)   */
 .deck-menu {
   position: absolute;
   top: 10px;
@@ -332,9 +317,7 @@ main {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  /* standard (future) */
   line-clamp: 2;
-  /* current, working */
   -webkit-line-clamp: 2;
 }
 
@@ -389,14 +372,6 @@ main {
 #deck-page {
 
   padding: 16px;
-}
-
-.deck-header {
-  /* background: white; */
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 20px;
-  position: relative;
 }
 
 .deck-header .bookmark {
@@ -455,33 +430,6 @@ main {
   display: flex;
   flex-direction: column;
 }
-
-/* Centering container
-.study-wrapper {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Actual study UI 
-.study-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  max-width: 420px;
-  padding: 16px;
-}
-
-/* Flashcard sizing 
-.flashcard {
-  width: 100%;
-  max-width: 360px;
-  height: 220px;
-  perspective: 1000px;
-} */
 
 /* Controls */
 .card-controls {
@@ -705,7 +653,7 @@ main {
 }
 
 
-/* ---------- RESPONSIVE ---------- */
+/*   RESPONSIVE   */
 @media (max-width: 600px) {
   .navbar {
     flex-direction: column;

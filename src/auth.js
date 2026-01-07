@@ -114,7 +114,6 @@ export function initAuth() {
     }
 
     // Check for user profile in database
-    // Check for user profile in database
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
 
@@ -127,8 +126,6 @@ export function initAuth() {
       showApp();
 
     }
-
-    // If profile does not exist,then do nothing here
   });
 
 }
@@ -142,7 +139,7 @@ function initUsernameForm(user) {
   if (!form || !input) return;
 
   form.onsubmit = async e => {
-    e.preventDefault(); // Stop page reload
+    e.preventDefault(); 
 
     const username = input.value.trim();
 

@@ -29,8 +29,6 @@ export function createDeckButton() {
     <p>Create New Deck</p>
   `;
 
-  // When clicked, trigger the 'create-deck' event
-  // This event is listened to in src/decks.js
   btn.onclick = () => {
     document.dispatchEvent(new Event("create-deck"));
   };
@@ -50,14 +48,12 @@ export function showApp() {
   if (username) username.hidden = true;
 }
 
-// Helper to show the detailed Deck Page (Study Mode)
 export function showDeckPage() {
   const auth = document.getElementById("auth-section");
   const app = document.getElementById("app-section");
   const deck = document.getElementById("deck-page");
   const username = document.getElementById("username-section");
 
-  // Show deck page, hide others
   if (auth) auth.hidden = true;
   if (app) app.hidden = true;
   if (deck) deck.hidden = false;

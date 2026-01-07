@@ -21,7 +21,6 @@ export async function loadCards(deckId, isOwner = false) {
   cards = [];
 
   // Query to get cards for this deck, ordered by creation time
-  // Query to get cards for this deck, ordered by creation time
   const q = query(
     collection(db, "decks", deckId, "cards"),
     orderBy("createdAt", "asc")
