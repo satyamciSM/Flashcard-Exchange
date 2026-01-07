@@ -123,9 +123,16 @@ export function initDecks() {
   // FAVORITE DECKS
   const savedDecksContainer = document.getElementById("saved-decks");
   let favoriteDeckIds = new Set();
+  let savedDecksUnsubscribe = null; // Track the listener
 
   if (savedDecksContainer) {
     onAuthStateChanged(auth, user => {
+      // Unsubscribe from previous listener if it exists
+      if (savedDecksUnsubscribe) {
+        savedDecksUnsubscribe();
+        savedDecksUnsubscribe = null;
+      }
+
       if (!user) {
         savedDecksContainer.innerHTML = "<p>Login to see favorites</p>";
         favoriteDeckIds.clear();
@@ -134,7 +141,7 @@ export function initDecks() {
 
       const savedDecksRef = collection(db, "users", user.uid, "savedDecks");
 
-      onSnapshot(savedDecksRef, (snapshot) => {
+      savedDecksUnsubscribe = onSnapshot(savedDecksRef, (snapshot) => {
         favoriteDeckIds.clear();
         snapshot.forEach(doc => {
           favoriteDeckIds.add(doc.id);
@@ -150,7 +157,15 @@ export function initDecks() {
   }
 
   // PUBLIC DECKS
+  let publicDecksUnsubscribe = null;
+
   const loadPublicDecks = () => {
+    // Unsubscribe from previous listener if it exists
+    if (publicDecksUnsubscribe) {
+      publicDecksUnsubscribe();
+      publicDecksUnsubscribe = null;
+    }
+
     const sortValue = document.getElementById("sort-select").value;
 
     const q = query(
@@ -159,8 +174,8 @@ export function initDecks() {
       orderBy("createdAt", "desc")
     );
 
-    onSnapshot(q, snapshot => {
-      __publicDecksSearchCache = []; // reset cache
+    publicDecksUnsubscribe = onSnapshot(q, snapshot => {
+      __publicDecksSearchCache = [];
 
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
@@ -180,7 +195,12 @@ export function initDecks() {
     });
   };
 
-  loadPublicDecks();
+  // Reload public decks when auth state changes
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      loadPublicDecks();
+    }
+  });
 
   document.getElementById("sort-select").addEventListener("change", (e) => {
     renderPublicDecks(__publicDecksSearchCache, e.target.value);
@@ -221,25 +241,41 @@ function renderPublicDecks(decksData, sortMode) {
     document.dispatchEvent(new Event("create-deck"));
   });
 }
+
+let isRenderingFavorites = false;
+
 async function renderFavorites(container) {
+  if (isRenderingFavorites) return;
+  isRenderingFavorites = true;
+
   container.innerHTML = "";
   const ids = window.__favoriteDeckIds || new Set();
 
   if (ids.size === 0) {
     container.innerHTML = "<p>No favorites yet</p>";
+    isRenderingFavorites = false;
     return;
   }
 
+  // Track rendered deck IDs to prevent duplicates
+  const renderedIds = new Set();
+
   for (const id of ids) {
+    // Skip if already rendered
+    if (renderedIds.has(id)) continue;
+
     try {
       const snap = await getDoc(doc(db, "decks", id));
       if (snap.exists()) {
         renderDeck(snap, container);
+        renderedIds.add(id);
       }
     } catch (e) {
       console.error("Error rendering favorite:", e);
     }
   }
+
+  isRenderingFavorites = false;
 }
 
 window.updateFavoritesUI = () => {
@@ -464,10 +500,17 @@ function renderDeck(docSnap, container) {
       initComments(docSnap.id);
       addToHistory(docSnap.id, deck);
 
-      if (isOwner) {
-        document.getElementById("add-card-btn").onclick = () => {
-          openAddCardModal(docSnap.id);
-        };
+      // Show Add Card button only for owners
+      const addCardBtn = document.getElementById("add-card-btn");
+      if (addCardBtn) {
+        if (isOwner) {
+          addCardBtn.style.display = "block";
+          addCardBtn.onclick = () => {
+            openAddCardModal(docSnap.id);
+          };
+        } else {
+          addCardBtn.style.display = "none";
+        }
       }
     }, 50);
   };
@@ -479,6 +522,13 @@ function renderDeck(docSnap, container) {
 
 
 let __publicDecksSearchCache = [];
+
+// Global function to clear cache on logout
+window.clearPublicDecksCache = () => {
+  __publicDecksSearchCache = [];
+  const publicDecks = document.getElementById("public-decks");
+  if (publicDecks) publicDecks.innerHTML = "";
+};
 
 //  SEARCH INIT  
 export function initSearchAddon() {

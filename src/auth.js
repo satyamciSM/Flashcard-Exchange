@@ -109,6 +109,10 @@ export function initAuth() {
   // AUTH STATE
   onAuthStateChanged(auth, async user => {
     if (!user) {
+      // Clear public decks cache on logout
+      if (window.clearPublicDecksCache) {
+        window.clearPublicDecksCache();
+      }
       showAuth();
       return;
     }
@@ -139,7 +143,7 @@ function initUsernameForm(user) {
   if (!form || !input) return;
 
   form.onsubmit = async e => {
-    e.preventDefault(); 
+    e.preventDefault();
 
     const username = input.value.trim();
 
