@@ -14,7 +14,8 @@ import {
   deleteDoc,
   deleteField,
   serverTimestamp,
-  getDocs
+  getDocs,
+  getDoc
 } from "firebase/firestore";
 
 import { showDeckPage } from "./ui.js";
@@ -66,7 +67,7 @@ document.addEventListener("create-deck", () => {
         description,
         tags,
         ownerId: auth.currentUser.uid,
-        isPublic: false,
+        isPublic: true,
         likes: {},
         createdAt: serverTimestamp()
       });
@@ -81,7 +82,43 @@ document.addEventListener("create-deck", () => {
   cancelBtn.onclick = () => {
     modal.classList.add("hidden");
   };
+  cancelBtn.onclick = () => {
+    modal.classList.add("hidden");
+  };
 });
+
+
+/* ======================================================
+   MIGRATION HELPER (TEMPORARY)
+   Run window.makeAllDecksPublic() in console
+====================================================== */
+window.makeAllDecksPublic = async () => {
+  console.log("🚀 Starting migration: Making all decks public...");
+  try {
+    const querySnapshot = await getDocs(collection(db, "decks"));
+    let count = 0;
+    const updates = [];
+
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.isPublic !== true) {
+        updates.push(
+          updateDoc(doc(db, "decks", docSnap.id), { isPublic: true })
+            .then(() => console.log(`✅ Updated: ${data.title}`))
+            .catch(e => console.error(`❌ Error on ${data.title}`, e))
+        );
+        count++;
+      }
+    });
+
+    await Promise.all(updates);
+    console.log(`🎉 Done! Updated ${count} decks.`);
+    alert(`Migration Complete! Updated ${count} decks to public.`);
+  } catch (err) {
+    console.error("Migration failed:", err);
+    alert("Migration failed. Check console.");
+  }
+};
 
 export function initDecks() {
   const publicDecks = document.getElementById("public-decks");
@@ -117,15 +154,47 @@ export function initDecks() {
     });
   }
 
+  // FAVORITE DECKS
+  const savedDecksContainer = document.getElementById("saved-decks");
+  let favoriteDeckIds = new Set(); // Track IDs of favorite decks
+
+  if (savedDecksContainer) {
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        savedDecksContainer.innerHTML = "<p>Login to see favorites</p>";
+        favoriteDeckIds.clear();
+        return;
+      }
+
+      const savedDecksRef = collection(db, "users", user.uid, "savedDecks");
+
+      onSnapshot(savedDecksRef, (snapshot) => {
+        favoriteDeckIds.clear();
+        snapshot.forEach(doc => {
+          favoriteDeckIds.add(doc.id);
+        });
+
+        // Sync global ref
+        window.__favoriteDeckIds = favoriteDeckIds;
+
+        // Trigger UI updates (List + Stars)
+        if (window.updateFavoritesUI) {
+          window.updateFavoritesUI();
+        }
+      });
+    });
+  }
+
   // PUBLIC DECKS
   const loadPublicDecks = () => {
+    // ... existing logic ...
+    // Pass favoriteDeckIds to renderPublicDecks? 
+    // Or make favoriteDeckIds global/accessible? 
+    // I'll assign it to window or module scope for simplicity in this file.
+    window.__favoriteDeckIds = favoriteDeckIds;
+
     const sortValue = document.getElementById("sort-select").value;
 
-    // Use client-side sorting for simplicity since we want to toggle quickly
-    // Query for Public Decks
-    // We fetch decks where 'isPublic' is true, ordered by creation date (newest first)
-    // Query for Public Decks
-    // We fetch decks where 'isPublic' is true, ordered by creation date (newest first)
     const q = query(
       collection(db, "decks"),
       where("isPublic", "==", true),
@@ -192,6 +261,49 @@ function renderPublicDecks(decksData, sortMode) {
   });
 }
 
+// Re-fetch Favorites helper
+async function renderFavorites(container) {
+  container.innerHTML = "";
+  const ids = window.__favoriteDeckIds || new Set();
+
+  if (ids.size === 0) {
+    container.innerHTML = "<p>No favorites yet</p>";
+    return;
+  }
+
+  for (const id of ids) {
+    try {
+      const snap = await getDoc(doc(db, "decks", id));
+      if (snap.exists()) {
+        renderDeck(snap, container);
+      }
+    } catch (e) {
+      console.error("Error rendering favorite:", e);
+    }
+  }
+}
+
+// Global listener to update UI when favorites change
+window.updateFavoritesUI = () => {
+  const container = document.getElementById("saved-decks");
+  if (container) renderFavorites(container);
+
+  // Update all star icons
+  document.querySelectorAll(".deck-card").forEach(card => {
+    const id = card.dataset.id;
+    if (id) {
+      const btn = card.querySelector(".bookmark");
+      if (btn) {
+        const isFav = window.__favoriteDeckIds.has(id);
+        btn.innerText = isFav ? "⭐️" : "☆";
+        if (isFav) btn.classList.add("active");
+        else btn.classList.remove("active");
+      }
+    }
+  });
+};
+
+
 function renderDeck(docSnap, container) {
   const deck = docSnap.data();
   const user = auth.currentUser;
@@ -201,9 +313,13 @@ function renderDeck(docSnap, container) {
 
   const isOwner = user && deck.ownerId === user.uid;
 
+  // Check favorite status
+  const isFavorite = window.__favoriteDeckIds ? window.__favoriteDeckIds.has(docSnap.id) : false;
+
 
   const el = document.createElement("div");
   el.className = "deck-card";
+  el.dataset.id = docSnap.id; // Store ID for updates
 
   el.innerHTML = `
     ${isOwner ? `
@@ -216,7 +332,10 @@ function renderDeck(docSnap, container) {
       </div>
     ` : ""}
 
-    <button class="bookmark">🔖</button>
+    <button class="bookmark">
+      ${isFavorite ? "⭐️" : "☆"}
+    </button>
+    
     <h4>${deck.title}</h4>
     <p>${deck.description}</p>
     ${deck.tags && deck.tags.length ? `
@@ -347,15 +466,28 @@ function renderDeck(docSnap, container) {
     }
   };
 
-  // BOOKMARK  
-  el.querySelector(".bookmark").onclick = e => {
+  // FAVORITE / STAR TOGGLE
+  el.querySelector(".bookmark").onclick = async e => {
     e.stopPropagation();
-    if (!user) return;
+    if (!user) {
+      alert("Please login to favorite decks.");
+      return;
+    }
 
-    setDoc(
-      doc(db, "users", user.uid, "savedDecks", docSnap.id),
-      { savedAt: serverTimestamp() }
-    );
+    const isFav = window.__favoriteDeckIds.has(docSnap.id);
+    const userRef = doc(db, "users", user.uid, "savedDecks", docSnap.id);
+
+    try {
+      if (isFav) {
+        // Remove from favorites
+        await deleteDoc(userRef);
+      } else {
+        // Add to favorites
+        await setDoc(userRef, { savedAt: serverTimestamp() });
+      }
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+    }
   };
 
   el.onclick = e => {

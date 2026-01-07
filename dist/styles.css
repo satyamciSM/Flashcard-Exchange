@@ -377,7 +377,7 @@ main {
 
 .bookmark.active {
   opacity: 1;
-  color: #2563eb;
+  color: white;
 }
 
 .deck-actions {
@@ -387,7 +387,7 @@ main {
 
 /*  DECK PAGE  */
 #deck-page {
-  
+
   padding: 16px;
 }
 
