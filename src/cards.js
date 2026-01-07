@@ -1,4 +1,3 @@
-// src/cards.js
 import { db, auth } from "./firebase.js";
 import {
   collection,
@@ -21,6 +20,8 @@ export async function loadCards(deckId, isOwner = false) {
   window.currentDeckIsOwner = isOwner;
   cards = [];
 
+  // Query to get cards for this deck, ordered by creation time
+  // Query to get cards for this deck, ordered by creation time
   const q = query(
     collection(db, "decks", deckId, "cards"),
     orderBy("createdAt", "asc")
@@ -37,36 +38,6 @@ export async function loadCards(deckId, isOwner = false) {
 }
 
 
-
-
-/* ---------------- RENDER CARD ---------------- */
-// function renderCard() {
-//   const termEl = document.getElementById("card-front");
-//   const defEl = document.getElementById("card-back");
-//   const counter = document.getElementById("card-counter");
-//   const inner = document.getElementById("flashcard-inner");
-
-//   // 🚨 DOM not ready yet
-//   if (!termEl || !defEl || !counter || !inner) {
-//     return;
-//   }
-
-//   if (!cards.length) {
-//     termEl.innerText = "No cards yet";
-//     defEl.innerText = "Add cards to start studying";
-//     counter.innerText = "0 / 0";
-//     return;
-//   }
-
-//   inner.classList.remove("flipped");
-
-//   termEl.innerText = cards[currentIndex].term;
-//   defEl.innerText = cards[currentIndex].definition;
-//   counter.innerText = `${currentIndex + 1} / ${cards.length}`;
-// }
-
-
-/* ---------------- STUDY CONTROLS ---------------- */
 /* ---------------- RENDER CARD (STUDY MODE) ---------------- */
 function renderCurrentStudyCard() {
   const termEl = document.getElementById("study-card-front");
@@ -74,9 +45,14 @@ function renderCurrentStudyCard() {
   const counter = document.getElementById("study-counter");
   const inner = document.getElementById("study-card-inner");
 
-  if (!termEl || !defEl || !counter || !inner) return;
+  // Ensure all elements exist before proceeding
+  // This prevents errors if we are on a different page (e.g. dashboard)
+  if (!termEl || !defEl || !counter || !inner) {
+    return;
+  }
 
-  if (!cards.length) {
+  // Handle empty deck case
+  if (cards.length === 0) {
     termEl.innerText = "No cards yet";
     defEl.innerText = "Add cards to start studying";
     counter.innerText = "0 / 0";
@@ -97,31 +73,13 @@ function renderCurrentStudyCard() {
   // Clear previous
   actionsContainer.innerHTML = "";
 
-  // Check ownership
-  // We need to know if current user is owner. But cards.js doesn't have easy access to deck's ownerID directly unless we fetch it or store it. 
-  // However, decks.js passes deckId. We can check generic ownership if we had deck info.
-  // SIMPLIFICATION: pass owner status or fetch it? 
-  // Better: check auth.currentUser vs currentDeckId logic or trust UI?
-  // Actually, we can just check if user is logged in and deck owner.
-  // Retrying check:
-  // We don't have deck object here. But we can import auth.
-
-  // Wait, loadCards doesn't know if user is owner. decks.js checks that.
-  // Let's rely on a global or check it again.
-  // Or, since we want to be fast, let's fetch deck info in loadCards? No, repetitive.
-  // Alternative: Have decks.js set a global "isOwner" flag on window or pass it to loadCards.
-  // Let's pass it to loadCards.
-
-  // Updating loadCards signature in next step or now? 
-  // Let's assume passed in loadCards(deckId, isOwner).
-
   if (window.currentDeckIsOwner) {
     const editBtn = document.createElement("button");
     editBtn.textContent = "Edit";
     editBtn.className = "secondary";
-    editBtn.style.fontSize = "1rem"; // Increased size
-    editBtn.style.padding = "8px 16px"; // Increased padding
-    editBtn.style.marginRight = "10px"; // Add spacing
+    editBtn.style.fontSize = "1rem";
+    editBtn.style.padding = "8px 16px";
+    editBtn.style.marginRight = "10px";
     editBtn.onclick = (e) => {
       e.stopPropagation();
       openEditCardModal(cards[currentIndex]);
@@ -130,14 +88,13 @@ function renderCurrentStudyCard() {
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Delete";
     deleteBtn.className = "danger";
-    deleteBtn.style.fontSize = "1rem"; // Increased size
-    deleteBtn.style.padding = "8px 16px"; // Increased padding
+    deleteBtn.style.fontSize = "1rem";
+    deleteBtn.style.padding = "8px 16px";
     deleteBtn.onclick = async (e) => {
       e.stopPropagation();
       if (!confirm("Delete current card?")) return;
       await deleteDoc(doc(db, "decks", currentDeckId, "cards", cards[currentIndex].id));
-      await deleteDoc(doc(db, "decks", currentDeckId, "cards", cards[currentIndex].id));
-      await loadCards(currentDeckId, window.currentDeckIsOwner); // persist ownership
+      await loadCards(currentDeckId, window.currentDeckIsOwner);
     };
 
     actionsContainer.appendChild(editBtn);
@@ -151,16 +108,15 @@ export function initStudyControls() {
   const flashcard = document.getElementById("study-flashcard");
   const nextBtn = document.getElementById("next-card-btn");
   const prevBtn = document.getElementById("prev-card-btn");
-  const flipBtn = document.getElementById("flip-card-btn");
 
   if (!flashcard || !nextBtn || !prevBtn) return;
 
   // Flip card
+  // Function to flip the flashcard
   const toggleFlip = () => {
+    // Toggles the 'flipped' CSS class which handles the 3D rotation
     flashcard.classList.toggle("flipped");
   };
-
-
 
   flashcard.onclick = toggleFlip;
 
@@ -180,6 +136,8 @@ export function initStudyControls() {
       renderCurrentStudyCard();
     }
   };
+
+
 }
 
 /* ---------------- EDIT CARD ---------------- */
@@ -251,11 +209,12 @@ export function openAddCardModal(deckId) {
     }
 
     try {
+      // Add new card to Firestore
       await addDoc(
         collection(db, "decks", currentDeckId, "cards"),
         {
-          term,
-          definition,
+          term: term,
+          definition: definition,
           createdAt: serverTimestamp()
         }
       );

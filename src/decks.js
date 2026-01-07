@@ -42,8 +42,18 @@ document.addEventListener("create-deck", () => {
   confirmBtn.onclick = async () => {
     const title = titleInput.value.trim();
     const description = descInput.value.trim();
-    const tagsStr = document.getElementById("create-deck-tags").value.trim();
-    const tags = tagsStr ? tagsStr.split(",").map(t => t.trim()).filter(t => t) : [];
+    // Get the tags string from input
+    const tagsString = document.getElementById("create-deck-tags").value.trim();
+
+    // Process tags: Split by comma, trim whitespace, and remove empty entries
+    let tags = [];
+    if (tagsString.length > 0) {
+      tags = tagsString.split(",").map(function (tag) {
+        return tag.trim();
+      }).filter(function (tag) {
+        return tag.length > 0;
+      });
+    }
 
     if (!title) {
       alert("Deck title is required");
@@ -82,13 +92,13 @@ export function initDecks() {
     onAuthStateChanged(auth, user => {
       if (!user) return;
 
-      const userQuery = query(
+      const q = query(
         collection(db, "decks"),
         where("ownerId", "==", user.uid),
         orderBy("createdAt", "desc")
       );
 
-      onSnapshot(userQuery, snapshot => {
+      onSnapshot(q, snapshot => {
         const existingDecks = userDecks.querySelectorAll(
           ".deck-card:not(#create-deck-btn)"
         );
@@ -112,10 +122,14 @@ export function initDecks() {
     const sortValue = document.getElementById("sort-select").value;
 
     // Use client-side sorting for simplicity since we want to toggle quickly
+    // Query for Public Decks
+    // We fetch decks where 'isPublic' is true, ordered by creation date (newest first)
+    // Query for Public Decks
+    // We fetch decks where 'isPublic' is true, ordered by creation date (newest first)
     const q = query(
       collection(db, "decks"),
       where("isPublic", "==", true),
-      orderBy("createdAt", "desc") // Fetch mostly recent first
+      orderBy("createdAt", "desc")
     );
 
     onSnapshot(q, snapshot => {
@@ -176,33 +190,6 @@ function renderPublicDecks(decksData, sortMode) {
   createBtn.addEventListener("click", () => {
     document.dispatchEvent(new Event("create-deck"));
   });
-
-  // //SEARCH SYSTEM
-  // const searchInput = document.getElementById("search-input");
-  // const overlay = document.getElementById("search-overlay");
-  // const results = document.getElementById("search-results");
-  // const dashboard = document.getElementById("app-section");
-
-  // searchInput.addEventListener("input", () => {
-  //   const query = searchInput.value.trim().toLowerCase();
-
-  //   if (!query) {
-  //     overlay.classList.add("hidden");
-  //     dashboard.classList.remove("dimmed");
-  //     results.innerHTML = "";
-  //     return;
-  //   }
-
-  //   results.innerHTML = "";
-
-  //   matches.forEach(deck => {
-  //     renderDeckFromSearch(deck, results);
-  //   });
-
-  //   overlay.classList.remove("hidden");
-  //   dashboard.classList.add("dimmed");
-  // });
-
 }
 
 function renderDeck(docSnap, container) {
@@ -286,8 +273,12 @@ function renderDeck(docSnap, container) {
       saveBtn.onclick = async () => {
         const newTitle = titleInput.value.trim();
         const newDesc = descInput.value.trim();
-        const newTagsStr = tagsInput.value.trim();
-        const newTags = newTagsStr ? newTagsStr.split(",").map(t => t.trim()).filter(t => t) : [];
+        // Process new tags similar to creation
+        const newTagsString = tagsInput.value.trim();
+        let newTags = [];
+        if (newTagsString.length > 0) {
+          newTags = newTagsString.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0);
+        }
 
         if (!newTitle) {
           alert("Deck title cannot be empty");
@@ -426,11 +417,23 @@ export function initSearchAddon() {
       return;
     }
 
-    const matches = __publicDecksSearchCache.filter(d =>
-      d.title?.toLowerCase().includes(q) ||
-      d.description?.toLowerCase().includes(q) ||
-      d.tags?.some(tag => tag.toLowerCase().includes(q))
-    );
+    // Filter decks based on the search query
+    const matches = __publicDecksSearchCache.filter(deck => {
+      // Check Title
+      const titleMatch = deck.title && deck.title.toLowerCase().includes(q);
+
+      // Check Description
+      const descriptionMatch = deck.description && deck.description.toLowerCase().includes(q);
+
+      // Check Tags
+      let tagMatch = false;
+      if (deck.tags) {
+        tagMatch = deck.tags.some(tag => tag.toLowerCase().includes(q));
+      }
+
+      // Return true if any condition matches
+      return titleMatch || descriptionMatch || tagMatch;
+    });
 
     results.innerHTML = "";
 
@@ -450,7 +453,13 @@ export function initSearchAddon() {
     const isInsideCard = e.target.closest(".deck-card");
     const isInsideOverlay = overlay.contains(e.target);
 
-    if (!isInsideOverlay || (isInsideOverlay && !isInsideCard)) {
+    // Logic to close the search overlay:
+    // 1. If we clicked OUTSIDE the overlay container
+    // 2. OR if we clicked the overlay background (empty space between cards)
+    const clickedOutside = !isInsideOverlay;
+    const clickedOnEmptySpace = isInsideOverlay && !isInsideCard;
+
+    if (clickedOutside || clickedOnEmptySpace) {
       overlay.classList.add("hidden");
       dashboard.classList.remove("dimmed");
     }

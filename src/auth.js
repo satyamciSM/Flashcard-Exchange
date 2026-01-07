@@ -36,20 +36,21 @@ export function initAuth() {
   const logoutBtn = document.getElementById("logout-btn");
   const deleteBtn = document.getElementById("delete-account-btn");
 
-  // SIGN UP
+  // SIGN UP LOGIC
   if (signupBtn) {
     signupBtn.addEventListener("click", async () => {
-      clearAuthError();
+      clearAuthError(); // Hide previous errors
       try {
-        const cred = await createUserWithEmailAndPassword(
+        // create user in Firebase Auth
+        const credentials = await createUserWithEmailAndPassword(
           auth,
           emailInput.value,
           passwordInput.value
         );
 
-        //Immediately show username setup
+        // Immediately show username setup screen
         showUsernameSetup();
-        initUsernameForm(cred.user);
+        initUsernameForm(credentials.user);
 
       } catch (err) {
         showAuthError(err.message);
@@ -112,10 +113,12 @@ export function initAuth() {
       return;
     }
 
+    // Check for user profile in database
+    // Check for user profile in database
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
 
-    // If user profile exists,then go to app
+    // If user profile exists, then go to app
     if (snap.exists()) {
       const { username } = snap.data();
       setUsernameUI(username);
@@ -139,7 +142,7 @@ function initUsernameForm(user) {
   if (!form || !input) return;
 
   form.onsubmit = async e => {
-    e.preventDefault();
+    e.preventDefault(); // Stop page reload
 
     const username = input.value.trim();
 
