@@ -43,7 +43,7 @@ document.addEventListener("create-deck", () => {
   confirmBtn.onclick = async () => {
     const title = titleInput.value.trim();
     const description = descInput.value.trim();
- 
+
     const tagsString = document.getElementById("create-deck-tags").value.trim();
 
     let tags = [];
@@ -122,7 +122,7 @@ export function initDecks() {
 
   // FAVORITE DECKS
   const savedDecksContainer = document.getElementById("saved-decks");
-  let favoriteDeckIds = new Set(); 
+  let favoriteDeckIds = new Set();
 
   if (savedDecksContainer) {
     onAuthStateChanged(auth, user => {
@@ -276,13 +276,14 @@ function renderDeck(docSnap, container) {
 
   const el = document.createElement("div");
   el.className = "deck-card";
-  el.dataset.id = docSnap.id; 
+  el.dataset.id = docSnap.id;
 
   el.innerHTML = `
     ${isOwner ? `
       <div class="deck-menu">
         <button class="menu-btn">⋮</button>
         <div class="menu-dropdown">
+          <button class="toggle-visibility">${deck.isPublic ? "Public" : "Private"}</button>
           <button class="edit-deck">Edit deck</button>
           <button class="delete-deck danger">Delete deck</button>
         </div>
@@ -324,6 +325,19 @@ function renderDeck(docSnap, container) {
       },
       { once: true }
     );
+
+    // VISIBILITY TOGGLE
+    el.querySelector(".toggle-visibility").onclick = async e => {
+      e.stopPropagation();
+      try {
+        await updateDoc(doc(db, "decks", docSnap.id), {
+          isPublic: !deck.isPublic
+        });
+      } catch (err) {
+        alert("Failed to toggle visibility");
+        console.error(err);
+      }
+    };
 
     // EDIT DECK — POPUP
     el.querySelector(".edit-deck").onclick = e => {
@@ -391,7 +405,7 @@ function renderDeck(docSnap, container) {
     };
   }
 
-  
+
   // LIKE TOGGLE  
   const likeBtn = el.querySelector(".like-btn");
   likeBtn.onclick = async e => {
@@ -448,7 +462,7 @@ function renderDeck(docSnap, container) {
     setTimeout(async () => {
       await loadCards(docSnap.id, isOwner);
       initComments(docSnap.id);
-      addToHistory(docSnap.id, deck); 
+      addToHistory(docSnap.id, deck);
 
       if (isOwner) {
         document.getElementById("add-card-btn").onclick = () => {
