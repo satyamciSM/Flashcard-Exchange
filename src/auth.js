@@ -24,10 +24,8 @@ import {
 } from "./ui.js";
 
 
-// INIT AUTH 
 export function initAuth() {
 
-  // Inputs and buttons
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
 
@@ -36,19 +34,16 @@ export function initAuth() {
   const logoutBtn = document.getElementById("logout-btn");
   const deleteBtn = document.getElementById("delete-account-btn");
 
-  // SIGN UP LOGIC
   if (signupBtn) {
     signupBtn.addEventListener("click", async () => {
-      clearAuthError(); // Hide previous errors
+      clearAuthError(); 
       try {
-        // create user in Firebase Auth
         const credentials = await createUserWithEmailAndPassword(
           auth,
           emailInput.value,
           passwordInput.value
         );
 
-        // Immediately show username setup screen
         showUsernameSetup();
         initUsernameForm(credentials.user);
 
@@ -58,8 +53,6 @@ export function initAuth() {
     });
   }
 
-
-  // LOGIN
   if (loginBtn) {
     loginBtn.addEventListener("click", async () => {
       clearAuthError();
@@ -75,12 +68,10 @@ export function initAuth() {
     });
   }
 
-  // LOGOUT 
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => signOut(auth));
   }
 
-  // DELETE ACCOUNT
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async () => {
       const user = auth.currentUser;
@@ -105,11 +96,8 @@ export function initAuth() {
       }
     });
   }
-
-  // AUTH STATE
   onAuthStateChanged(auth, async user => {
     if (!user) {
-      // Clear public decks cache on logout
       if (window.clearPublicDecksCache) {
         window.clearPublicDecksCache();
       }
@@ -117,11 +105,9 @@ export function initAuth() {
       return;
     }
 
-    // Check for user profile in database
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
 
-    // If user profile exists, then go to app
     if (snap.exists()) {
       const { username } = snap.data();
       setUsernameUI(username);
@@ -139,8 +125,6 @@ function initUsernameForm(user) {
   const form = document.getElementById("username-form");
   const input = document.getElementById("username-input");
   const error = document.getElementById("username-error");
-
-  if (!form || !input) return;
 
   form.onsubmit = async e => {
     e.preventDefault();

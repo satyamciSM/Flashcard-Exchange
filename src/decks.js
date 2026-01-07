@@ -622,7 +622,6 @@ function renderDeckForSearchAddon(deck, container) {
   container.appendChild(el);
 }
 
-//  BOOTSTRAP SEARCH ADDON
 document.addEventListener("DOMContentLoaded", initSearchAddon);
 
 
@@ -669,7 +668,6 @@ export function initComments(deckId) {
         </div>
         <p class="comment-text">${data.text}</p>
       `;
-
 
 
       // MENU TOGGLE

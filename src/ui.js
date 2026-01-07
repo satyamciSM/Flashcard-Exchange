@@ -59,7 +59,6 @@ export function showDeckPage() {
   if (deck) deck.hidden = false;
   if (username) username.hidden = true;
 
-  // Setup 'Back' button to return to dashboard
   document.getElementById("back-to-dashboard").onclick = () => {
     document.getElementById("deck-page").hidden = true;
     document.getElementById("app-section").hidden = false;

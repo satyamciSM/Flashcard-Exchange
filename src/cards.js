@@ -37,7 +37,6 @@ export async function loadCards(deckId, isOwner = false) {
 }
 
 
-/* ---------------- RENDER CARD (STUDY MODE) ---------------- */
 function renderCurrentStudyCard() {
   const termEl = document.getElementById("study-card-front");
   const defEl = document.getElementById("study-card-back");
