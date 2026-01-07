@@ -227,9 +227,11 @@ button {
 
 /* ---------- MAIN ---------- */
 main {
+
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
+
 }
 
 .deck-section {
@@ -385,6 +387,7 @@ main {
 
 /*  DECK PAGE  */
 #deck-page {
+  
   padding: 16px;
 }
 
@@ -448,7 +451,7 @@ main {
 /* deck-page */
 #deck-page {
   min-height: 100vh;
-  background: linear-gradient(90deg, rgb(239, 239, 161), #f3f34d, rgb(239, 239, 161));
+  background: linear-gradient(135deg, #f1f35a, #ffffff);
   display: flex;
   flex-direction: column;
 }

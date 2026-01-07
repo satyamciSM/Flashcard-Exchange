@@ -443,7 +443,14 @@ export function initSearchAddon() {
   });
 
   document.addEventListener("click", e => {
-    if (!overlay.contains(e.target) && e.target !== input) {
+    // Keep open if clicking input
+    if (e.target === input) return;
+
+    // Close if clicking outside overlay OR clicking the overlay background (not a card)
+    const isInsideCard = e.target.closest(".deck-card");
+    const isInsideOverlay = overlay.contains(e.target);
+
+    if (!isInsideOverlay || (isInsideOverlay && !isInsideCard)) {
       overlay.classList.add("hidden");
       dashboard.classList.remove("dimmed");
     }
